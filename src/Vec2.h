@@ -2,10 +2,10 @@
  * Vec2.h
  *
  *  Created on: 10/10/2014
- *      Author: lucas
+ *      Author: Lucas Teske
 
- ShaderBasis
- Copyright (C) 2014  lucas
+    ShaderBasis
+    Copyright (C) 2014  Lucas Teske
 
  This program is free software; you can redistribute it and/or modify
  it under the terms of the GNU General Public License as published by
@@ -28,23 +28,32 @@
 class Vec2 {
 public:
 	union{float x; float u;};
-	union{float y; float u;};
+	union{float y; float v;};
 
 	Vec2(float _x, float _y)	{x=_x;y=_y;}
 	Vec2(float a)	:	Vec2(a,a) {};
 	Vec2() 			: 	Vec2(0,0) {};
-	virtual ~Vec2();
+
+	inline void operator+=(const Vec2 b)	{	x+=b.x;y+=b.y;				}
+	inline void operator-=(const Vec2 b)	{	x-=b.x;y-=b.y;				}
+	inline void operator*=(const Vec2 b)	{	x*=b.x;y*=b.y;				}
+	inline void operator/=(const Vec2 b)	{	x/=b.x;y/=b.y;				}
+
+	inline void operator+=(const float b)	{	x+=b;y+=b;					}
+	inline void operator-=(const float b)	{	x-=b;y-=b;					}
+	inline void operator*=(const float b)	{	x*=b;y*=b;					}
+	inline void operator/=(const float b)	{	x/=b;y/=b;					}
 
 
-	Vec2 operator+(const Vec2& b)	{	return Vec2(x+b.x,y+b.y);	}
-	Vec2 operator-(const Vec2& b)	{	return Vec2(x-b.x,y-b.y); 	}
-	Vec2 operator*(const Vec2& b)	{	return Vec2(x*b.x,y*b.y); 	}
-	Vec2 operator/(const Vec2 &b)	{	return Vec2(x/b.x,y/b.y); 	}
+	inline Vec2 operator+(const Vec2 b)	{	return Vec2(x+b.x,y+b.y);	}
+	inline Vec2 operator-(const Vec2 b)	{	return Vec2(x-b.x,y-b.y); 	}
+	inline Vec2 operator*(const Vec2 b)	{	return Vec2(x*b.x,y*b.y); 	}
+	inline Vec2 operator/(const Vec2 b)	{	return Vec2(x/b.x,y/b.y); 	}
 
-	Vec2 operator+(const float &b)	{	return Vec2(x+b,y+b);	 	}
-	Vec2 operator-(const float &b)	{	return Vec2(x-b,y-b); 		}
-	Vec2 operator*(const float &b)	{	return Vec2(x*b,y*b);		}
-	Vec2 operator/(const float &b)	{	return Vec2(x/b,y/b);		}
+	inline Vec2 operator+(const float b)	{	return Vec2(x+b,y+b);	 	}
+	inline Vec2 operator-(const float b)	{	return Vec2(x-b,y-b); 		}
+	inline Vec2 operator*(const float b)	{	return Vec2(x*b,y*b);		}
+	inline Vec2 operator/(const float b)	{	return Vec2(x/b,y/b);		}
 };
 
 #endif /* VEC2_H_ */

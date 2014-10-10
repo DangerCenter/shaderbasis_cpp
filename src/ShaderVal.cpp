@@ -1,5 +1,5 @@
 /*
- * ShaderVar.h
+ * ShaderVal.cpp
  *
  *  Created on: 10/10/2014
  *      Author: lucas
@@ -22,13 +22,14 @@
  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
-#ifndef SHADERVAR_H_
-#define SHADERVAR_H_
+#include "ShaderVal.h"
 
-class ShaderVar {
-public:
-	ShaderVar();
-	virtual ~ShaderVar();
-};
+ShaderVal::ShaderVal() {
+	// TODO Auto-generated constructor stub
 
-#endif /* SHADERVAR_H_ */
+}
+
+ShaderVal::~ShaderVal() {
+	// TODO Auto-generated destructor stub
+}
+

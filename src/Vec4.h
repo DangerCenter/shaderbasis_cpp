@@ -2,10 +2,10 @@
  * Vec4.h
  *
  *  Created on: 10/10/2014
- *      Author: lucas
+ *      Author: Lucas Teske
 
- ShaderBasis
- Copyright (C) 2014  lucas
+    ShaderBasis
+    Copyright (C) 2014  Lucas Teske
 
  This program is free software; you can redistribute it and/or modify
  it under the terms of the GNU General Public License as published by
@@ -52,19 +52,34 @@ public:
 	Vec3 xyz()	{ return Vec3(x,y,z); }
 	Vec3 rgb()	{ return Vec3(x,y,z); }
 
-	Vec4();
-	virtual ~Vec4();
+	Vec4(float _x, float _y, float _z, float _w)	{	x=_x;y=_y;z=_z;w=_w; }
+	Vec4(float a) : Vec4(a,a,a,a) {};
+	Vec4(Vec3 a, float w) : Vec4(a.x,a.y,a.z,w) {};
 
-	Vec4 operator+(const Vec4& b)	{	return Vec4(x+b.x,y+b.y,z+b.z,w+b.w); 	}
-	Vec4 operator-(const Vec4& b)	{	return Vec4(x-b.x,y-b.y,z-b.z,w-b.w); 	}
-	Vec4 operator*(const Vec4& b)	{	return Vec4(x*b.x,y*b.y,z*b.z,w*b.w); 	}
-	Vec4 operator/(const Vec4 &b)	{	return Vec4(x/b.x,y/b.y,z/b.z,w/b.w); 	}
+	Vec4() : Vec4(0,0,0,0) {};
 
 
-	Vec4 operator+(const float &b)	{	return Vec4(x+b,y+b,z+b,w+b); 			}
-	Vec4 operator-(const float &b)	{	return Vec4(x-b,y-b,z-b,w-b); 			}
-	Vec4 operator*(const float &b)	{	return Vec4(x*b,y*b,z*b,w*b);			}
-	Vec4 operator/(const float &b)	{	return Vec4(x/b,y/b,z/b,w/b);			}
+	inline void operator+=(const Vec4 b)	{	x+=b.x;y+=b.y;z+=b.z;w+=b.w;			}
+	inline void operator-=(const Vec4 b)	{	x-=b.x;y-=b.y;z-=b.z;w-=b.w;			}
+	inline void operator*=(const Vec4 b)	{	x*=b.x;y*=b.y;z*=b.z;w*=b.w;			}
+	inline void operator/=(const Vec4 b)	{	x/=b.x;y/=b.y;z/=b.z;w/=b.w;			}
+
+	inline void operator+=(const float b)	{	x+=b;y+=b;z+=b;w+=b;					}
+	inline void operator-=(const float b)	{	x-=b;y-=b;z-=b;w-=b;					}
+	inline void operator*=(const float b)	{	x*=b;y*=b;z*=b;w*=b;					}
+	inline void operator/=(const float b)	{	x/=b;y/=b;z/=b;w/=b;					}
+
+
+	inline Vec4 operator+(const Vec4 b)	{	return Vec4(x+b.x,y+b.y,z+b.z,w+b.w); 	}
+	inline Vec4 operator-(const Vec4 b)	{	return Vec4(x-b.x,y-b.y,z-b.z,w-b.w); 	}
+	inline Vec4 operator*(const Vec4 b)	{	return Vec4(x*b.x,y*b.y,z*b.z,w*b.w); 	}
+	inline Vec4 operator/(const Vec4 b)	{	return Vec4(x/b.x,y/b.y,z/b.z,w/b.w); 	}
+
+
+	inline Vec4 operator+(const float b)	{	return Vec4(x+b,y+b,z+b,w+b); 			}
+	inline Vec4 operator-(const float b)	{	return Vec4(x-b,y-b,z-b,w-b); 			}
+	inline Vec4 operator*(const float b)	{	return Vec4(x*b,y*b,z*b,w*b);			}
+	inline Vec4 operator/(const float b)	{	return Vec4(x/b,y/b,z/b,w/b);			}
 };
 
 #endif /* VEC4_H_ */

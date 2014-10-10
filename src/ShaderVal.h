@@ -1,11 +1,11 @@
 /*
- * ShaderVar.cpp
+ * ShaderVal.h
  *
  *  Created on: 10/10/2014
- *      Author: lucas
+ *      Author: Lucas Teske
 
- ShaderBasis
- Copyright (C) 2014  lucas
+    ShaderBasis
+    Copyright (C) 2014  Lucas Teske
 
  This program is free software; you can redistribute it and/or modify
  it under the terms of the GNU General Public License as published by
@@ -22,14 +22,23 @@
  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
-#include "ShaderVar.h"
+#ifndef SHADERVAL_H_
+#define SHADERVAL_H_
 
-ShaderVar::ShaderVar() {
-	// TODO Auto-generated constructor stub
+#include "Vec2.h"
+#include "Vec3.h"
+#include "Vec4.h"
 
-}
+class ShaderVal {
+public:
+	ShaderVal();
+	virtual ~ShaderVal();
 
-ShaderVar::~ShaderVar() {
-	// TODO Auto-generated destructor stub
-}
+	Vec4 v4;
+	Vec3 v3;
+	Vec2 v2;
+	int i;
+	float f;
+};
 
+#endif /* SHADERVAL_H_ */
