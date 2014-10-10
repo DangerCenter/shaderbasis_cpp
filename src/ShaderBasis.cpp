@@ -112,35 +112,28 @@ int main() {
 	UpdateBuffer(buffer, texture, clock);
 
 	while (window.isOpen())	{
-			UpdateBuffer(buffer, texture, clock);
+		UpdateBuffer(buffer, texture, clock);
 
-			if(lastupdate+DELTA_UPDATE_FPS < clock.getElapsedTime().asSeconds())	{
-				lastupdate = clock.getElapsedTime().asSeconds();
-				ss.str(string());
-				ss.clear();
-				ss << "ShaderBasis - FPS: ";
-				ss << 1.f / deltaFrame;
-				ss << " - Delta: ";
-				ss << deltaFrame << " ms";
-				window.setTitle(ss.str());
-			}
-	        // check all the window's events that were triggered since the last iteration of the loop
-	        sf::Event event;
-	        while (window.pollEvent(event))
-	        {
-	            // "close requested" event: we close the window
-	            if (event.type == sf::Event::Closed)
-	                window.close();
-	        }
+		if(lastupdate+DELTA_UPDATE_FPS < clock.getElapsedTime().asSeconds())	{
+			lastupdate = clock.getElapsedTime().asSeconds();
+			ss.str(string());
+			ss.clear();
+			ss << "ShaderBasis - FPS: ";
+			ss << 1.f / deltaFrame;
+			ss << " - Delta: ";
+			ss << deltaFrame << " ms";
+			window.setTitle(ss.str());
+		}
+		sf::Event event;
+		while (window.pollEvent(event))	{
+			if (event.type == sf::Event::Closed)
+				window.close();
+		}
 
-	        // clear the window with black color
-	        window.clear(sf::Color::Black);
+		window.clear(sf::Color::Black);
 
-	        // draw everything here...
-	        // window.draw(...);
-	        window.draw(sprite);
-	        // end the current frame
-	        window.display();
-	    }
+		window.draw(sprite);
+		window.display();
+	}
 	return 0;
 }

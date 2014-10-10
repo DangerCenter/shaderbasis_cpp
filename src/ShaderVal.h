@@ -31,9 +31,6 @@
 
 class ShaderVal {
 public:
-	ShaderVal();
-	virtual ~ShaderVal();
-
 	Vec4 v4;
 	Vec3 v3;
 	Vec2 v2;
