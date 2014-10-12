@@ -13,11 +13,15 @@
  * |____/|_| |_|\__,_|\__,_|\___|_|  |____/ \__,_|___/_|___/
  */
 
+#define __USE_SDL__
+
 #include <iostream>
 #include <map>
 #include <cmath>
 #include <sstream>
 #include <SFML/Graphics.hpp>
+#include <SDL.h>
+#include <SDL/SDL.h>
 
 #include "Vec2.h"
 #include "Vec3.h"
@@ -25,6 +29,13 @@
 
 #include "ShaderVal.h"
 #include "ShaderFunctions.h"
+
+
+#define WIDTH 640
+#define HEIGHT 480
+#define BPP 4
+#define DEPTH 32
+
 
 using namespace std;
 
@@ -72,6 +83,7 @@ Vec4 Shader(Vec2 &coord, map<string, ShaderVal> &ext)	{
 	return Vec4( colour, 1.0f );
 }
 
+#ifndef __USE_SDL__
 
 void UpdateBuffer(sf::Image &img, sf::Texture &tex, sf::Clock &time)	{
 	map<string, ShaderVal> ext;
@@ -96,15 +108,65 @@ void UpdateBuffer(sf::Image &img, sf::Texture &tex, sf::Clock &time)	{
 	deltaFrame = time.getElapsedTime().asSeconds() - deltaFrame;
 }
 
+#else
+inline void setpixel(SDL_Surface *screen, int x, int y, Uint8 r, Uint8 g, Uint8 b)
+{
+    Uint32 *pixmem32;
+    Uint32 colour;
+
+    colour = SDL_MapRGB( screen->format, r, g, b );
+
+    pixmem32 = (Uint32*) screen->pixels  + y + x;
+    *pixmem32 = colour;
+}
+
+void DrawScreen(SDL_Surface* screen, sf::Clock &time)	{
+	int x, y, ytimesw;
+	map<string, ShaderVal> ext;
+	ShaderVal timeval, res;
+	timeval.f = time.getElapsedTime().asSeconds();
+	deltaFrame = timeval.f;
+	res.v2.x = screen->w;
+	res.v2.y = screen->h;
+	ext["time"] = timeval;
+	ext["res"] = res;
+	Vec2 coord;
+
+	if(SDL_MUSTLOCK(screen))
+		if(SDL_LockSurface(screen) < 0) return;
+
+
+	for(y = 0; y < screen->h; y++ )	{
+		ytimesw = y*screen->pitch/BPP;
+		for( x = 0; x < screen->w; x++ )	{
+			coord.x = (x / res.v2.x) * 2.f - 0.5f;
+			coord.y = (y / res.v2.y) * 2.f - 0.5f;
+			Vec4 data = Shader(coord, ext);
+			clamp(data,1.f);
+			setpixel(screen, x, ytimesw, data.r*255, data.g*255, data.b*255);
+		}
+	}
+
+	if(SDL_MUSTLOCK(screen)) SDL_UnlockSurface(screen);
+
+	SDL_Flip(screen);
+	deltaFrame = time.getElapsedTime().asSeconds() - deltaFrame;
+}
+
+
+
+#endif
+
 
 int main() {
-	sf::RenderWindow window(sf::VideoMode(640, 640), "ShaderBasis");
-	sf::Image buffer;
-	sf::Sprite sprite;
-	sf::Texture texture;
 	sf::Clock clock;
 	float lastupdate = 0;
 	stringstream ss;
+#ifndef __USE_SDL__
+	sf::RenderWindow window(sf::VideoMode(WIDTH, HEIGHT), "ShaderBasis");
+	sf::Image buffer;
+	sf::Sprite sprite;
+	sf::Texture texture;
 
 	buffer.create(640, 640, sf::Color::Red);
 	texture.loadFromImage(buffer);
@@ -116,13 +178,10 @@ int main() {
 
 		if(lastupdate+DELTA_UPDATE_FPS < clock.getElapsedTime().asSeconds())	{
 			lastupdate = clock.getElapsedTime().asSeconds();
-			ss.str(string());
-			ss.clear();
-			ss << "ShaderBasis - FPS: ";
-			ss << 1.f / deltaFrame;
-			ss << " - Delta: ";
-			ss << deltaFrame << " ms";
-			window.setTitle(ss.str());
+			cout << "ShaderBasis - FPS: ";
+			cout << 1.f / deltaFrame;
+			cout << " - Delta: ";
+			cout << deltaFrame << " ms" << endl;
 		}
 		sf::Event event;
 		while (window.pollEvent(event))	{
@@ -135,5 +194,40 @@ int main() {
 		window.draw(sprite);
 		window.display();
 	}
+#else
+	SDL_Surface *screen;
+	SDL_Event event;
+
+	int keypress = 0;
+	if (SDL_Init(SDL_INIT_VIDEO) < 0 ) return 1;
+
+	if (!(screen = SDL_SetVideoMode(WIDTH, HEIGHT, DEPTH, SDL_HWSURFACE)))	{
+		SDL_Quit();
+		return 1;
+	}
+
+	while(!keypress)	{
+		if(lastupdate+DELTA_UPDATE_FPS < clock.getElapsedTime().asSeconds())	{
+			lastupdate = clock.getElapsedTime().asSeconds();
+			cout << "ShaderBasis - FPS: ";
+			cout << 1.f / deltaFrame;
+			cout << " - Delta: ";
+			cout << deltaFrame << " ms" << endl;
+		}
+		DrawScreen(screen,clock);
+		while(SDL_PollEvent(&event))	{
+			switch (event.type)	{
+				case SDL_QUIT:
+				keypress = 1;
+				break;
+				case SDL_KEYDOWN:
+				keypress = 1;
+				break;
+				}
+		}
+	}
+
+	SDL_Quit();
+#endif
 	return 0;
 }
