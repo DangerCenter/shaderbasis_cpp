@@ -21,7 +21,6 @@
 #include <sstream>
 #include <SFML/Graphics.hpp>
 #include <SDL.h>
-#include <SDL/SDL.h>
 
 #include "Vec2.h"
 #include "Vec3.h"
@@ -109,51 +108,36 @@ void UpdateBuffer(sf::Image &img, sf::Texture &tex, sf::Clock &time)	{
 }
 
 #else
-inline void setpixel(SDL_Surface *screen, int x, int y, Uint8 r, Uint8 g, Uint8 b)
-{
-    Uint32 *pixmem32;
-    Uint32 colour;
 
-    colour = SDL_MapRGB( screen->format, r, g, b );
-
-    pixmem32 = (Uint32*) screen->pixels  + y + x;
-    *pixmem32 = colour;
-}
-
-void DrawScreen(SDL_Surface* screen, sf::Clock &time)	{
+void DrawScreen(SDL_Renderer *renderer, Uint32 * pixels, SDL_Texture * texture, int width, int height, sf::Clock &time)	{
 	int x, y, ytimesw;
 	map<string, ShaderVal> ext;
 	ShaderVal timeval, res;
 	timeval.f = time.getElapsedTime().asSeconds();
 	deltaFrame = timeval.f;
-	res.v2.x = screen->w;
-	res.v2.y = screen->h;
+	res.v2.x = width;
+	res.v2.y = height;
 	ext["time"] = timeval;
 	ext["res"] = res;
 	Vec2 coord;
 
-	if(SDL_MUSTLOCK(screen))
-		if(SDL_LockSurface(screen) < 0) return;
+  for(y=0;y<height;y++) {
+    for(x=0;x<width;x++) {
+      coord.x = (x / res.v2.x) * 2.f - 0.5f;
+      coord.y = (y / res.v2.y) * 2.f - 0.5f;
+      Vec4 data = Shader(coord, ext);
+      clamp(data, 1.f);
+      pixels[x + y * width] = 255 << 24 | (uint32_t)(data.r * 255) << 16 | (uint32_t)(data.g * 255) << 8 | (uint32_t)(data.b * 255) << 0;
+    }
+  }
 
+  SDL_UpdateTexture(texture, NULL, pixels, 640 * sizeof(Uint32));
+  SDL_RenderClear(renderer);
+  SDL_RenderCopy(renderer, texture, NULL, NULL);
+  SDL_RenderPresent(renderer);
 
-	for(y = 0; y < screen->h; y++ )	{
-		ytimesw = y*screen->pitch/BPP;
-		for( x = 0; x < screen->w; x++ )	{
-			coord.x = (x / res.v2.x) * 2.f - 0.5f;
-			coord.y = (y / res.v2.y) * 2.f - 0.5f;
-			Vec4 data = Shader(coord, ext);
-			clamp(data,1.f);
-			setpixel(screen, x, ytimesw, data.r*255, data.g*255, data.b*255);
-		}
-	}
-
-	if(SDL_MUSTLOCK(screen)) SDL_UnlockSurface(screen);
-
-	SDL_Flip(screen);
 	deltaFrame = time.getElapsedTime().asSeconds() - deltaFrame;
 }
-
-
 
 #endif
 
@@ -195,16 +179,15 @@ int main() {
 		window.display();
 	}
 #else
-	SDL_Surface *screen;
 	SDL_Event event;
 
 	int keypress = 0;
-	if (SDL_Init(SDL_INIT_VIDEO) < 0 ) return 1;
+  Uint32 * pixels = new Uint32[640 * 480];
 
-	if (!(screen = SDL_SetVideoMode(WIDTH, HEIGHT, DEPTH, SDL_HWSURFACE)))	{
-		SDL_Quit();
-		return 1;
-	}
+  SDL_Window *sdlWindow;
+  SDL_Renderer *sdlRenderer;
+  SDL_CreateWindowAndRenderer(640, 480,  SDL_WINDOW_RESIZABLE, &sdlWindow, &sdlRenderer);
+  SDL_Texture * texture = SDL_CreateTexture(sdlRenderer, SDL_PIXELFORMAT_ARGB8888, SDL_TEXTUREACCESS_STATIC, 640, 480);
 
 	while(!keypress)	{
 		if(lastupdate+DELTA_UPDATE_FPS < clock.getElapsedTime().asSeconds())	{
@@ -214,7 +197,8 @@ int main() {
 			cout << " - Delta: ";
 			cout << deltaFrame << " ms" << endl;
 		}
-		DrawScreen(screen,clock);
+
+		DrawScreen(sdlRenderer, pixels, texture, 640, 480, clock);
 		while(SDL_PollEvent(&event))	{
 			switch (event.type)	{
 				case SDL_QUIT:
@@ -227,6 +211,9 @@ int main() {
 		}
 	}
 
+  delete[] pixels;
+  SDL_DestroyTexture(texture);
+  SDL_DestroyRenderer(sdlRenderer);
 	SDL_Quit();
 #endif
 	return 0;
