@@ -15,7 +15,8 @@
 
 #define __USE_SDL__
 
-#include <iostream>
+#include <iostream>     // std::cout
+#include <functional>   // std::bind
 #include <map>
 #include <cmath>
 #include <sstream>
@@ -28,6 +29,7 @@
 
 #include "ShaderVal.h"
 #include "ShaderFunctions.h"
+#include "ShaderThreadArgs.h"
 
 
 #define WIDTH 640
@@ -41,31 +43,10 @@ using namespace std;
 float deltaFrame = 0;
 
 #define DELTA_UPDATE_FPS 1.f
+#define THREADS 8
 
-/*
-// TESTING SHADER
-Vec4 Shader(Vec2 &coord, map<string, ShaderVal> &ext)	{
-	Vec4 color(1,1,1,1);
-	Vec2 uv = coord;
-    if(uv.x < 0.5 && uv.y < 0.5) {
-        color.x = 1.0;
-        color.y = 0.0;
-        color.z = 0.0;
-    }else if(uv.x > 0.5 && uv.y < 0.5) {
-        color.x = 0.0;
-        color.y = 1.0;
-        color.z = 0.0;
-    }else if(uv.x > 0.5 && uv.y > 0.5) {
-        color.x = 0.0;
-        color.y = 0.0;
-        color.z = 1.0;
-    }else if(uv.x < 0.5 && uv.y > 0.5) {
-        color.x = 1.0;
-        color.y = 1.0;
-        color.z = 1.0;
-    }
-    return color;
-}*/
+// https://www.shadertoy.com/view/Xd33D7
+
 Vec4 Shader(Vec2 &coord, map<string, ShaderVal> &ext)	{
 
 	Vec2 position = coord - 0.5f;
@@ -109,6 +90,22 @@ void UpdateBuffer(sf::Image &img, sf::Texture &tex, sf::Clock &time)	{
 
 #else
 
+void ShaderAction(ShaderThreadArgs &args) {
+  int x,y;
+  Vec2 coord;
+  ShaderVal res = (*args.ext)["res"];
+
+  for(y=args.startLine;y<args.endLine;y++) {
+    for(x=0;x<args.width;x++) {
+      coord.x = (x / res.v2.x) * 2.f - 0.5f;
+      coord.y = (y / res.v2.y) * 2.f - 0.5f;
+      Vec4 data = Shader(coord, *args.ext);
+      clamp(data, 1.f);
+      args.pixels[x + y * args.width] = 255 << 24 | (uint32_t)(data.r * 255) << 16 | (uint32_t)(data.g * 255) << 8 | (uint32_t)(data.b * 255) << 0;
+    }
+  }
+}
+
 void DrawScreen(SDL_Renderer *renderer, Uint32 * pixels, SDL_Texture * texture, int width, int height, sf::Clock &time)	{
 	int x, y, ytimesw;
 	map<string, ShaderVal> ext;
@@ -120,15 +117,23 @@ void DrawScreen(SDL_Renderer *renderer, Uint32 * pixels, SDL_Texture * texture, 
 	ext["time"] = timeval;
 	ext["res"] = res;
 	Vec2 coord;
+  sf::Thread *threads[THREADS];
 
-  for(y=0;y<height;y++) {
-    for(x=0;x<width;x++) {
-      coord.x = (x / res.v2.x) * 2.f - 0.5f;
-      coord.y = (y / res.v2.y) * 2.f - 0.5f;
-      Vec4 data = Shader(coord, ext);
-      clamp(data, 1.f);
-      pixels[x + y * width] = 255 << 24 | (uint32_t)(data.r * 255) << 16 | (uint32_t)(data.g * 255) << 8 | (uint32_t)(data.b * 255) << 0;
-    }
+  for(int i=0;i<THREADS;i++) {
+    ShaderThreadArgs args;
+    args.width = width;
+    args.height = height;
+    args.startLine = (height / THREADS) * i;
+    args.endLine = (height / THREADS) * ( i + 1);
+    args.ext = &ext;
+    args.pixels = pixels;
+
+    threads[i] = new sf::Thread(&ShaderAction, args);
+    threads[i]->launch();
+  }
+
+  for(int i=0;i<THREADS;i++) {
+    threads[i]->wait();
   }
 
   SDL_UpdateTexture(texture, NULL, pixels, 640 * sizeof(Uint32));
